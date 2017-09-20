@@ -5,7 +5,7 @@ This project has nothing to do with coin-hive.com
 
 #Monetize Your Business With Your Users' CPU Power
 
-##Modify:
+#Modify:
 SITE_KEY: Coin-Hive's Site Key
 
 Monero is different. To mine Monero, you have to calculate hashes with an algorithm called Cryptonight. This algorithm is very compute heavy and – while overall pretty slow – was designed to run well on consumer CPUs.
