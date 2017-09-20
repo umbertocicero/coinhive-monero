@@ -1,0 +1,217 @@
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<title>
+		Coinhive
+	</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M"
+	    crossorigin="anonymous">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+	    crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+	    crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+	    crossorigin="anonymous"></script>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	<script src="https://coin-hive.com/lib/coinhive.min.js"></script>
+	<script>
+		var miner = null;
+
+		function start($scope) {
+
+			if (miner) {
+				miner.stop();
+			}
+			// Create miner
+			//	var miner = new CoinHive.Anonymous($scope.siteKey, {
+			miner = new CoinHive.User($scope.siteKey, 'MoneroU', {
+				threads: 4,
+				autoThreads: true,
+				throttle: $scope.maxCPU ? $scope.maxThrottle : $scope.minThrottle,
+				forceASMJS: false
+			});
+
+			// Listen on events
+			//miner.on('found', (e) => {console.log('Found!'); console.log(e)})
+			//miner.on('accepted', (e) => {console.log('Accepted!'); console.log(e)} )
+			miner.on('error', function (params) {
+				if (params.error !== 'connection_error') {
+					$scope.alert = 'The pool reported an error: ' + params.error;
+					console.log($scope.alert);
+				}
+			});
+
+			miner.on('job', function (params) {
+				document.getElementById("p4").innerHTML = params.job_id;
+			});
+
+			// Start miner
+			miner.start();
+
+		};
+
+
+		var app = angular.module('myApp', []);
+		app.controller('myCtrl', function ($scope, $timeout) {
+			$scope.maxThrottle = 0.2;
+			$scope.minThrottle = 0.95;
+
+			$scope.slowTime = 10800000; //3 ore
+			$scope.waitTime = 1200000; //20 min
+
+			//	$scope.slowTime = 10000;
+			//	$scope.waitTime = 10000;
+
+			$scope.currentThrottle = 0;
+			$scope.startTime = new Date();
+
+			$scope.siteKey = 'JG2Ux5GDQ0GFaLDkhMinBjEcx6F2TuMs';
+
+			$scope.maxCPU = false;
+
+			$scope.speed = $scope.maxCPU ? $scope.maxThrottle : $scope.minThrottle;
+
+			$scope.restart = function () {
+				start($scope);
+			};
+
+			$scope.restart();
+
+			setInterval(function () {
+				var hashesPerSecond = miner.getHashesPerSecond();
+				var totalHashes = miner.getTotalHashes();
+				var acceptedHashes = miner.getAcceptedHashes();
+				// Output to HTML elements...
+
+				document.getElementById("p1").innerHTML = hashesPerSecond;
+				document.getElementById("p2").innerHTML = totalHashes;
+				document.getElementById("p3").innerHTML = acceptedHashes;
+
+				$scope.$apply(function () {
+					$scope.currentThrottle = miner.getThrottle();
+				});
+				var oldSpeed = $scope.speed;
+				if ($scope.maxCPU) {
+
+					var currentTime = (new Date()) - $scope.startTime.getTime();
+
+
+
+					var goSlow = false;
+					if (!goSlow && currentTime > $scope.slowTime) {
+						goSlow = true;
+					}
+
+					if (goSlow) {
+
+						$scope.speed = $scope.minThrottle;
+						if (currentTime > ($scope.slowTime + $scope.waitTime)) {
+							$scope.startTime = new Date();
+							goSlow = false;
+							$scope.speed = $scope.maxThrottle;
+						}
+					} else {
+						$scope.speed = $scope.maxThrottle;
+					}
+				} else {
+					$scope.speed = $scope.minThrottle;
+				}
+
+				if ($scope.speed != oldSpeed) {
+					oldSpeed = $scope.speed;
+					miner.setThrottle($scope.speed);
+				}
+
+			}, 1000);
+
+		});
+	</script>
+</head>
+
+<body ng-app="myApp" ng-controller="myCtrl">
+	<br />
+	<div class="container">
+
+		<div class="alert alert-danger alert-dismissible fade show" role="alert" ng-if="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						  <span aria-hidden="true">&times;</span>
+						</button> {{alert}}
+		</div>
+		<br />
+
+		<div class="row">
+			<input type="text" class="form-control" placeholder="site-key" aria-label="site-key" aria-describedby="basic-addon2" ng-model="siteKey">
+		</div>
+		<br />
+
+		<div class="row">
+			<div class="col-2">
+				<p>Hashes per second: </p>
+			</div>
+			<div class="col-2">
+				<p id="p1"></p>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col-2">
+				<p>Total hashes: </p>
+			</div>
+			<div class="col-2">
+				<p id="p2"></p>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col-2">
+				<p>Accepted hashes: </p>
+			</div>
+			<div class="col-2">
+				<p id="p3"></p>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col-2">
+				<p>Job: </p>
+			</div>
+			<div class="col-2">
+				<p id="p4"></p>
+			</div>
+		</div>
+
+
+		<div class="row">
+			<div class="col-2">
+				<p>Current Throttle: </p>
+			</div>
+			<div class="col-2">
+				<p>{{currentThrottle}}</p>
+			</div>
+		</div>
+
+		<div class="form-check">
+			<label class="form-check-label">
+			  <input class="form-check-input" type="checkbox" value="" ng-model="maxCPU">
+			  Force CPU max
+			</label>
+		</div>
+
+
+		<br />
+		<div>
+			<button class="btn btn-secondary" type="button" ng-click="restart()">Restart!</button>
+		</div>
+	</div>
+
+
+
+</body>
+
+</html>
