@@ -92,6 +92,15 @@
 				miner.setNumThreads($scope.numThreads);
 			};
 
+			$scope.stop = function () {
+				if (miner) {
+					miner.stop();
+					$scope.hashesPerSecond = 0;
+					$scope.totalHashes = 0;
+					$scope.acceptedHashes = 0;
+				}
+			};
+
 			$scope.changeThrottle = function () {
 				$scope.speed = $scope.minThrottle;
 				miner.setThrottle($scope.speed);
@@ -181,43 +190,24 @@
 		</div>
 		<br />
 
-		<div class="row">
-			<div class="col-2">
-				<p>Hashes per second: </p>
-			</div>
-			<div class="col-2">
-				<p id="p1"> {{hashesPerSecond}}</p>
-			</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Hashes per second: </label>
+			<label class="col-sm-2 col-form-label">{{hashesPerSecond}}</label>
 		</div>
 
-
-		<div class="row">
-			<div class="col-2">
-				<p>Total hashes: </p>
-			</div>
-			<div class="col-2">
-				<p id="p2">{{totalHashes}}</p>
-			</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Total hashes: </label>
+			<label class="col-sm-2 col-form-label">{{totalHashes}}</label>
 		</div>
 
-
-		<div class="row">
-			<div class="col-2">
-				<p>Accepted hashes: </p>
-			</div>
-			<div class="col-2">
-				<p id="p3">{{acceptedHashes}}</p>
-			</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Accepted hashes: </label>
+			<label class="col-sm-2 col-form-label">{{acceptedHashes}}</label>
 		</div>
 
-
-		<div class="row">
-			<div class="col-2">
-				<p>Last Job Id: </p>
-			</div>
-			<div class="col-2">
-				<p id="p4">{{jobId}}</p>
-			</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Last Job Id: </label>
+			<label class="col-sm-2 col-form-label">{{jobId}}</label>
 		</div>
 
 		<div class="form-group row">
@@ -243,16 +233,20 @@
 			</label>
 		</div>
 
-
-
-
-
 		<br />
-		<a href="https://coin-hive.com/dashboard" target="_blank" class="btn btn-primary" role="button" aria-disabled="true">coin-hive</a>
-		<a href="https://mymonero.com/#/" target="_blank" class="btn btn-primary" role="button" aria-disabled="true">mymonero Wallet</a>
-		<a href="https://www.coingecko.com/en/price_charts/monero/eur" target="_blank" class="btn btn-primary" role="button" aria-disabled="true">XMR/EUR</a>
+		<div >
+			<button type="button" class="btn btn-warning pull-info" role="button" aria-disabled="true" ng-click="stop()">Stop</button>
+		</div>
+		<br />
+		<div >
+			<a href="https://coin-hive.com/dashboard" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">coin-hive</a>
+			<a href="https://mymonero.com/#/" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">mymonero Wallet</a>
+			<a href="https://www.coingecko.com/en/price_charts/monero/eur" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">XMR/EUR</a>
 
-		
+
+
+		</div>
+
 	</div>
 
 
