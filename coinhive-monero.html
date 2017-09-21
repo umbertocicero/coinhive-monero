@@ -70,8 +70,8 @@
 			$scope.maxThrottle = 0.2;
 			$scope.minThrottle = 0.95;
 
-			$scope.slowTime = 10800000; //3 ore
-			$scope.waitTime = 1200000; //20 min
+			$scope.slowTime = 120; //2 ore
+			$scope.waitTime = 15; //20 min
 
 			//	$scope.slowTime = 10000;
 			//	$scope.waitTime = 10000;
@@ -125,14 +125,17 @@
 
 					var currentTime = (new Date()) - $scope.startTime.getTime();
 
+					var slowMill = $scope.slowTime * 60000;
+					var waitMill = $scope.waitTime * 60000;
+
 					var goSlow = false;
-					if (!goSlow && currentTime > $scope.slowTime) {
+					if (!goSlow && currentTime > slowMill) {
 						goSlow = true;
 					}
 
 					if (goSlow) {
 						$scope.speed = $scope.minThrottle;
-						if (currentTime > ($scope.slowTime + $scope.waitTime)) {
+						if (currentTime > (slowMill + waitMill)) {
 							$scope.startTime = new Date();
 							goSlow = false;
 							$scope.speed = $scope.maxThrottle;
@@ -167,15 +170,12 @@
 		<br />
 
 		<div class="form-group row">
-
-
 			<div class="input-group">
 				<span class="input-group-addon" id="basic-addon1">SITE-KEY</span>
 				<input type="text" class="form-control" placeholder="site-key" aria-label="site-key" aria-describedby="basic-addon1" ng-model="siteKey"
 				    ng-change="onChangeSiteKey()" required>
 				<span class="input-group-btn"><button class="btn btn-secondary" type="button" ng-click="restart()">Restart!</button></span>
 			</div>
-
 		</div>
 
 		<div class="form-group row">
@@ -220,10 +220,23 @@
 			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="minThrottle"
 			    ng-disabled="maxCPU" step="0.01" min="0" max="1" required ng-change="changeThrottle()">
 		</div>
+
 		<div class="form-group row">
 			<label class="col-sm-2 col-form-label">Number of threads: </label>
 			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="numThreads"
 			    min="0" max="16" required ng-change="changeNumThreads()">
+		</div>
+
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Go slow after [min]: </label>
+			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="slowTime"
+			    ng-disabled="!maxCPU" min="1" required>
+		</div>
+
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Stay slow [min]: </label>
+			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="waitTime"
+			    ng-disabled="!maxCPU" min="1" required>
 		</div>
 
 		<div class="form-check">
@@ -234,22 +247,18 @@
 		</div>
 
 		<br />
-		<div >
+		<div>
 			<button type="button" class="btn btn-warning pull-info" role="button" aria-disabled="true" ng-click="stop()">Stop</button>
 		</div>
 		<br />
-		<div >
+		<div>
 			<a href="https://coin-hive.com/dashboard" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">coin-hive</a>
+			<a href="https://www.coingecko.com/en/price_charts/monero/eur" target="_blank" class="btn btn-primary  btn-sm" role="button"
+			    aria-disabled="true">XMR/EUR</a>
 			<a href="https://mymonero.com/#/" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">mymonero Wallet</a>
-			<a href="https://www.coingecko.com/en/price_charts/monero/eur" target="_blank" class="btn btn-primary  btn-sm" role="button" aria-disabled="true">XMR/EUR</a>
-
-
-
 		</div>
 
 	</div>
-
-
 
 </body>
 
