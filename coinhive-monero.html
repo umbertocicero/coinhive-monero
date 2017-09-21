@@ -26,13 +26,15 @@
 				miner.stop();
 			}
 			// Create miner
-			//	var miner = new CoinHive.Anonymous($scope.siteKey, {
-			miner = new CoinHive.User($scope.siteKey, 'MoneroU', {
-				threads: 4,
-				autoThreads: true,
-				throttle: $scope.maxCPU ? $scope.maxThrottle : $scope.minThrottle,
-				forceASMJS: false
-			});
+			if ($scope.isAnonymous) {
+				miner = new CoinHive.Anonymous($scope.siteKey);
+			} else {
+				miner = new CoinHive.User($scope.siteKey, $scope.userName);
+			}
+
+			miner.setNumThreads($scope.numThreads);
+			miner.setThrottle($scope.speed);
+			miner.setAutoThreadsEnabled(true)
 
 			// Listen on events
 			//miner.on('found', (e) => {console.log('Found!'); console.log(e)})
@@ -45,7 +47,9 @@
 			});
 
 			miner.on('job', function (params) {
-				document.getElementById("p4").innerHTML = params.job_id;
+				$scope.$apply(function () {
+					$scope.jobId = params.job_id;
+				});
 			});
 
 			// Start miner
@@ -53,9 +57,16 @@
 
 		};
 
-
 		var app = angular.module('myApp', []);
 		app.controller('myCtrl', function ($scope, $timeout) {
+
+			$scope.isAnonymous = false;
+			$scope.userName = 'MoneroU';
+			$scope.siteKey = 'JG2Ux5GDQ0GFaLDkhMinBjEcx6F2TuMs';
+
+			$scope.alert = '';
+			$scope.numThreads = 4;
+
 			$scope.maxThrottle = 0.2;
 			$scope.minThrottle = 0.95;
 
@@ -68,27 +79,34 @@
 			$scope.currentThrottle = 0;
 			$scope.startTime = new Date();
 
-			$scope.siteKey = 'JG2Ux5GDQ0GFaLDkhMinBjEcx6F2TuMs';
-
 			$scope.maxCPU = false;
 
 			$scope.speed = $scope.maxCPU ? $scope.maxThrottle : $scope.minThrottle;
 
 			$scope.restart = function () {
+				$scope.alert = "";
 				start($scope);
+			};
+
+			$scope.changeNumThreads = function () {
+				miner.setNumThreads($scope.numThreads);
+			};
+
+			$scope.changeThrottle = function () {
+				$scope.speed = $scope.minThrottle;
+				miner.setThrottle($scope.speed);
+			};
+
+			$scope.onChangeSiteKey = function () {
+				$scope.alert = "You must restart the miner";
 			};
 
 			$scope.restart();
 
 			setInterval(function () {
-				var hashesPerSecond = miner.getHashesPerSecond();
-				var totalHashes = miner.getTotalHashes();
-				var acceptedHashes = miner.getAcceptedHashes();
-				// Output to HTML elements...
-
-				document.getElementById("p1").innerHTML = hashesPerSecond;
-				document.getElementById("p2").innerHTML = totalHashes;
-				document.getElementById("p3").innerHTML = acceptedHashes;
+				$scope.hashesPerSecond = miner.getHashesPerSecond();
+				$scope.totalHashes = miner.getTotalHashes();
+				$scope.acceptedHashes = miner.getAcceptedHashes();
 
 				$scope.$apply(function () {
 					$scope.currentThrottle = miner.getThrottle();
@@ -98,15 +116,12 @@
 
 					var currentTime = (new Date()) - $scope.startTime.getTime();
 
-
-
 					var goSlow = false;
 					if (!goSlow && currentTime > $scope.slowTime) {
 						goSlow = true;
 					}
 
 					if (goSlow) {
-
 						$scope.speed = $scope.minThrottle;
 						if (currentTime > ($scope.slowTime + $scope.waitTime)) {
 							$scope.startTime = new Date();
@@ -142,8 +157,27 @@
 		</div>
 		<br />
 
-		<div class="row">
-			<input type="text" class="form-control" placeholder="site-key" aria-label="site-key" aria-describedby="basic-addon2" ng-model="siteKey">
+		<div class="form-group row">
+
+
+			<div class="input-group">
+				<span class="input-group-addon" id="basic-addon1">SITE-KEY</span>
+				<input type="text" class="form-control" placeholder="site-key" aria-label="site-key" aria-describedby="basic-addon1" ng-model="siteKey"
+				    ng-change="onChangeSiteKey()" required>
+				<span class="input-group-btn"><button class="btn btn-secondary" type="button" ng-click="restart()">Restart!</button></span>
+			</div>
+
+		</div>
+
+		<div class="form-group row">
+			<div class="input-group">
+				<span class="input-group-addon">Checkbox for Anonymous</span>
+				<span class="input-group-addon">
+							<input type="checkbox" aria-label="Checkbox for Anonymous" ng-model="isAnonymous" ng-change="onChangeSiteKey()">
+						  </span>
+
+				<input type="text" class="form-control" aria-label="Miner Name" ng-model="userName" ng-disabled="isAnonymous" ng-change="onChangeSiteKey()">
+			</div>
 		</div>
 		<br />
 
@@ -152,7 +186,7 @@
 				<p>Hashes per second: </p>
 			</div>
 			<div class="col-2">
-				<p id="p1"></p>
+				<p id="p1"> {{hashesPerSecond}}</p>
 			</div>
 		</div>
 
@@ -162,7 +196,7 @@
 				<p>Total hashes: </p>
 			</div>
 			<div class="col-2">
-				<p id="p2"></p>
+				<p id="p2">{{totalHashes}}</p>
 			</div>
 		</div>
 
@@ -172,28 +206,34 @@
 				<p>Accepted hashes: </p>
 			</div>
 			<div class="col-2">
-				<p id="p3"></p>
+				<p id="p3">{{acceptedHashes}}</p>
 			</div>
 		</div>
 
 
 		<div class="row">
 			<div class="col-2">
-				<p>Job: </p>
+				<p>Last Job Id: </p>
 			</div>
 			<div class="col-2">
-				<p id="p4"></p>
+				<p id="p4">{{jobId}}</p>
 			</div>
 		</div>
 
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Current Throttle: </label>
+			<label class="col-sm-2 col-form-label">{{currentThrottle}}</label>
+		</div>
 
-		<div class="row">
-			<div class="col-2">
-				<p>Current Throttle: </p>
-			</div>
-			<div class="col-2">
-				<p>{{currentThrottle}}</p>
-			</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Min Throttle: </label>
+			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="minThrottle"
+			    ng-disabled="maxCPU" step="0.01" min="0" max="1" required ng-change="changeThrottle()">
+		</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Number of threads: </label>
+			<input type="number" class="form-control col-sm-2 col-form-label" style="margin-left: 10;" name="input" ng-model="numThreads"
+			    min="0" max="16" required ng-change="changeNumThreads()">
 		</div>
 
 		<div class="form-check">
@@ -204,10 +244,14 @@
 		</div>
 
 
+
+
+
 		<br />
-		<div>
-			<button class="btn btn-secondary" type="button" ng-click="restart()">Restart!</button>
-		</div>
+		<a href="https://coin-hive.com/dashboard" target="_blank" class="btn btn-primary" role="button" aria-disabled="true">coin-hive</a>
+		<a href="https://mymonero.com/#/" target="_blank" class="btn btn-primary" role="button" aria-disabled="true">mymonero Wallet</a>
+
+		
 	</div>
 
 
