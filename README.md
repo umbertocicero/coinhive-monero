@@ -1,4 +1,4 @@
-# JavaScript miner for the cryptocurrency Monero Blockchain (XMR) using Coin-Hive
+# JavaScript miner for the cryptocurrency Monero Blockchain (XMR) using Coin-Hive 💰
 
 # Use Client's CPU Power
 Monero is different. To mine Monero, you have to calculate hashes with an algorithm called Cryptonight. This algorithm is very compute heavy and – while overall pretty slow – was designed to run well on consumer CPUs.
